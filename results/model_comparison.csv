@@ -1,5 +1,7 @@
 model,cv_rmse_mean,cv_rmse_std,oof_rmse,fit_seconds,best_params
 enet,0.52056,0.01152,0.52069,9.2,"{'model__alpha': 0.003, 'model__l1_ratio': 0.85}"
+bag_enet,0.52082,0.01156,0.52094,11.7,{'model__max_samples': 0.8}
+bag_ridge,0.52142,0.01218,0.52156,4.5,{'model__max_samples': 0.6}
 bridge,0.5215,0.01219,0.52164,1.2,{}
 ridge,0.5216,0.01201,0.52174,1.8,{'model__alpha': 10.0}
 ridge_decomp,0.52165,0.01178,0.52165,2.2,{'model__alpha': 30.0}

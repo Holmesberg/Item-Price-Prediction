@@ -10,6 +10,7 @@ from typing import Callable
 
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import (
+    BaggingRegressor,
     HistGradientBoostingRegressor,
     RandomForestRegressor,
 )
@@ -237,6 +238,44 @@ def build_huber(seed: int = SEED) -> Pipeline:
     )
 
 
+def build_bag_enet(seed: int = SEED) -> Pipeline:
+    """Bagging ElasticNet — 15 bootstrap copies, averaged. Variance reduction
+    on the new champion model."""
+    base = ElasticNet(alpha=0.003, l1_ratio=0.85, random_state=seed,
+                      max_iter=50000, tol=1e-5)
+    return Pipeline(
+        [
+            ("prep", build_linear_preprocessor()),
+            ("model", BaggingRegressor(
+                estimator=base,
+                n_estimators=15,
+                max_samples=0.8,
+                bootstrap=True,
+                random_state=seed,
+                n_jobs=-1,
+            )),
+        ]
+    )
+
+
+def build_bag_ridge(seed: int = SEED) -> Pipeline:
+    """Bagging Ridge — 15 bootstrap copies, averaged."""
+    base = Ridge(alpha=10.0, random_state=seed)
+    return Pipeline(
+        [
+            ("prep", build_linear_preprocessor()),
+            ("model", BaggingRegressor(
+                estimator=base,
+                n_estimators=15,
+                max_samples=0.8,
+                bootstrap=True,
+                random_state=seed,
+                n_jobs=-1,
+            )),
+        ]
+    )
+
+
 def build_hgbr(seed: int = SEED) -> Pipeline:
     return Pipeline(
         [
@@ -268,6 +307,8 @@ MODEL_REGISTRY: dict[str, Callable[[int], Pipeline]] = {
     "bridge": build_bridge,
     "huber": build_huber,
     "hgbr": build_hgbr,
+    "bag_enet": build_bag_enet,
+    "bag_ridge": build_bag_ridge,
 }
 
 
@@ -340,4 +381,7 @@ def param_grid(name: str) -> dict[str, list]:
             "model__max_leaf_nodes": [15, 31, 63],
             "model__l2_regularization": [0.0, 1.0],
         }
+    if name in ("bag_enet", "bag_ridge"):
+        # Tiny grid: just sample fraction. 3 fits.
+        return {"model__max_samples": [0.6, 0.8, 1.0]}
     raise KeyError(f"Unknown model: {name}")

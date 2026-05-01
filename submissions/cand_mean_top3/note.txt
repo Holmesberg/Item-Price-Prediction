@@ -1,2 +1,2 @@
-Equal-weight mean of top-3 by OOF RMSE: ['enet', 'ridge', 'bridge']
-OOF RMSE: 0.52104
+Equal-weight mean of top-3 by OOF RMSE: ['enet', 'bag_enet', 'bag_ridge']
+OOF RMSE: 0.52083
