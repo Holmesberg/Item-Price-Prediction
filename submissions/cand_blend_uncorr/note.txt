@@ -1,0 +1,3 @@
+Top + least-correlated of next 3: ridge (0.502) + lgbm (0.498)
+OOF corr: +0.996
+OOF RMSE: 0.5226

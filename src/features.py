@@ -16,8 +16,21 @@ RAW_NUMERIC = ["X2", "X4", "X6", "X8"]
 RAW_CATEGORICAL = ["X1", "X3", "X5", "X7", "X9", "X10", "X11"]
 
 # Engineered output columns after BigMartFeatures.transform:
-ENGINEERED_NUMERIC = ["X2", "X4", "X6", "Outlet_Years", "X4_ratio"]
+ENGINEERED_NUMERIC = [
+    "X2", "X4", "X6", "Outlet_Years", "X4_ratio",
+    "X1_count",   # train+test count of this X1 (Y-independent → no leakage)
+    "X7_count",   # train+test count of this X7
+    "X1_X7_count",  # count of (X1, X7) co-occurrence
+    "logX6",      # log of MRP — captures multiplicative structure of sales
+    "X4_dev_X1",  # X4 minus mean(X4 by X1) — per-item visibility deviation
+]
 ENGINEERED_CATEGORICAL = ["X1_prefix", "X3", "X5", "X6_bin", "X7", "X9", "X10", "X11"]
+# High-cardinality columns kept for target encoding (per-fold safe via
+# sklearn.preprocessing.TargetEncoder which uses internal cross-fitting).
+# Don't OHE these — too many unique values, OR (X5_X11) is created in
+# transform() as a 64-cell interaction to capture food-type × outlet-type
+# means without needing a 64-column OHE block.
+ENGINEERED_TARGET_ENCODE = ["X1", "X5_X11"]
 
 
 class BigMartFeatures(BaseEstimator, TransformerMixin):
@@ -32,8 +45,18 @@ class BigMartFeatures(BaseEstimator, TransformerMixin):
       6. Outlet_Years = OUTLET_REF_YEAR - X8.
       7. X9: mode-impute within X11.
       8. X4_ratio = X4 / mean(X4 by X7).
-      9. Drop X1 and X8 (X1 too high-cardinality, X8 replaced by Outlet_Years).
+      9. Drop X8 (replaced by Outlet_Years). Keep raw X1 for target encoding
+         (the OHE/Ordinal blocks ignore it; only the target-encoder block
+         consumes it).
     """
+
+    # Class-level optional reference: when set to a DataFrame with the same
+    # X-columns as the training data, BigMartFeatures.fit will pool train +
+    # this reference for the Y-independent count encodings (X1_count, X7_count,
+    # X1_X7_count). Y is never read from the reference, so this is leakage-safe
+    # — it just gives us better count statistics for X1s that are rare in
+    # train but appear in test.
+    EXTRA_COUNT_REF: pd.DataFrame | None = None
 
     def fit(self, X: pd.DataFrame, y=None):
         X = X.copy()
@@ -50,6 +73,29 @@ class BigMartFeatures(BaseEstimator, TransformerMixin):
         tmp = X.assign(X4=x4_imputed)
         self.x7_x4_mean_ = tmp.groupby("X7")["X4"].mean()
         self.global_x4_imputed_mean_ = float(x4_imputed.mean())
+
+        # Frequency encodings (Y-independent — zero leakage). For test rows
+        # whose key wasn't seen, .map() returns NaN; fillna(0) marks "unseen".
+        # When EXTRA_COUNT_REF is set (e.g., to test.csv X-columns), pool it
+        # into the count statistics for sharper rare-item signal.
+        count_source = X
+        if BigMartFeatures.EXTRA_COUNT_REF is not None:
+            count_source = pd.concat(
+                [X, BigMartFeatures.EXTRA_COUNT_REF[X.columns.intersection(
+                    BigMartFeatures.EXTRA_COUNT_REF.columns
+                )]],
+                ignore_index=True,
+            )
+        self.x1_counts_ = count_source["X1"].value_counts()
+        self.x7_counts_ = count_source["X7"].value_counts()
+        self.x1x7_counts_ = count_source.groupby(["X1", "X7"]).size()
+
+        # Per-item mean X4 — pooled across train+test (visibility is X-only,
+        # not Y, so this is leakage-safe). Used to compute X4_dev_X1.
+        x4_pooled = count_source.copy()
+        x4_pooled.loc[x4_pooled["X4"] == 0, "X4"] = np.nan
+        self.x1_x4_pooled_mean_ = x4_pooled.groupby("X1")["X4"].mean()
+        self.global_x4_pooled_mean_ = float(x4_pooled["X4"].mean())
 
         self.x6_bin_edges_ = np.quantile(
             X["X6"].dropna().values, [0.0, 0.25, 0.5, 0.75, 1.0]
@@ -92,6 +138,26 @@ class BigMartFeatures(BaseEstimator, TransformerMixin):
 
         X["Outlet_Years"] = OUTLET_REF_YEAR - X["X8"]
 
+        X["X1_count"] = X["X1"].map(self.x1_counts_).fillna(0).astype(float)
+        X["X7_count"] = X["X7"].map(self.x7_counts_).fillna(0).astype(float)
+        x1x7_keys = list(zip(X["X1"], X["X7"]))
+        X["X1_X7_count"] = (
+            pd.Series(x1x7_keys, index=X.index)
+            .map(self.x1x7_counts_.to_dict())
+            .fillna(0)
+            .astype(float)
+        )
+        X["logX6"] = np.log1p(X["X6"].astype(float).clip(lower=0))
+
+        # X4 deviation from per-item pooled mean (post-imputation X4).
+        x1_x4_lookup = X["X1"].map(self.x1_x4_pooled_mean_).fillna(
+            self.global_x4_pooled_mean_
+        )
+        X["X4_dev_X1"] = X["X4"] - x1_x4_lookup
+
+        # 64-cell food-type × outlet-type interaction for target encoding.
+        X["X5_X11"] = X["X5"].astype(str) + "_" + X["X11"].astype(str)
+
         x9_fill = X["X11"].map(self.x11_x9_mode_).fillna(self.global_x9_mode_)
         X["X9"] = X["X9"].where(X["X9"].notna(), x9_fill)
 
@@ -107,7 +173,7 @@ class BigMartFeatures(BaseEstimator, TransformerMixin):
         ).astype(object)
         X["X6_bin"] = X["X6_bin"].fillna("Q1")
 
-        return X[ENGINEERED_NUMERIC + ENGINEERED_CATEGORICAL]
+        return X[ENGINEERED_NUMERIC + ENGINEERED_CATEGORICAL + ENGINEERED_TARGET_ENCODE]
 
     @staticmethod
     def _impute_by_group(
@@ -121,4 +187,4 @@ class BigMartFeatures(BaseEstimator, TransformerMixin):
         return out.fillna(global_mean)
 
     def get_feature_names_out(self, input_features=None):
-        return np.array(ENGINEERED_NUMERIC + ENGINEERED_CATEGORICAL)
+        return np.array(ENGINEERED_NUMERIC + ENGINEERED_CATEGORICAL + ENGINEERED_TARGET_ENCODE)

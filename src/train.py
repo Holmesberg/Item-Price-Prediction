@@ -1,15 +1,19 @@
-"""Train all 4 models with shared 5-fold CV + per-model GridSearch.
+"""Train models with shared 5-fold CV + per-model GridSearch.
 
 Outputs:
   results/model_comparison.csv  — best params, CV RMSE mean/std, fit time
   results/oof_<model>.npy       — out-of-fold predictions (in log-Y space)
   results/best_<model>.joblib   — best-of-grid pipeline, refit on full train
 
-Usage: python -m src.train
+Usage:
+  python -m src.train                  # train every model in MODEL_REGISTRY
+  python -m src.train ridge_poly nn    # train only the named models, append
+                                       # rows to existing model_comparison.csv
 """
 
 from __future__ import annotations
 
+import sys
 import time
 from pathlib import Path
 
@@ -18,7 +22,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import GridSearchCV, KFold, cross_val_predict
 
-from .config import RESULTS_DIR, SEED, TRAIN_CSV, set_global_seed
+from .config import RESULTS_DIR, SEED, TEST_CSV, TRAIN_CSV, set_global_seed
+from .features import BigMartFeatures
 from .models import MODEL_REGISTRY, param_grid
 
 
@@ -34,10 +39,21 @@ def main() -> None:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     X, y = load_train()
+
+    # Pool test.csv X-columns into the count-encoder statistics. Y is never
+    # touched from test (only X-features), so this is a leakage-safe
+    # unsupervised augmentation that gives us sharper rare-item signal.
+    test_X = pd.read_csv(TEST_CSV)
+    BigMartFeatures.EXTRA_COUNT_REF = test_X
+    print(f"  pooling test.csv ({len(test_X)} rows) into count statistics")
     cv = KFold(n_splits=5, shuffle=True, random_state=SEED)
     rows: list[dict] = []
 
-    for name, factory in MODEL_REGISTRY.items():
+    requested = sys.argv[1:] if len(sys.argv) > 1 else list(MODEL_REGISTRY.keys())
+    targets = {name: MODEL_REGISTRY[name] for name in requested}
+    full_run = (set(requested) == set(MODEL_REGISTRY.keys()))
+
+    for name, factory in targets.items():
         print(f"\n=== {name} ===", flush=True)
         pipe = factory(seed=SEED)
         grid = param_grid(name)
@@ -85,10 +101,18 @@ def main() -> None:
             flush=True,
         )
 
-    out = pd.DataFrame(rows).sort_values("cv_rmse_mean").reset_index(drop=True)
-    out.to_csv(RESULTS_DIR / "model_comparison.csv", index=False)
+    new_rows = pd.DataFrame(rows)
+    comp_path = RESULTS_DIR / "model_comparison.csv"
+    if full_run or not comp_path.exists():
+        out = new_rows
+    else:
+        existing = pd.read_csv(comp_path)
+        existing = existing[~existing["model"].isin(new_rows["model"])]
+        out = pd.concat([existing, new_rows], ignore_index=True)
+    out = out.sort_values("cv_rmse_mean").reset_index(drop=True)
+    out.to_csv(comp_path, index=False)
     print("\n", out.to_string(index=False))
-    print(f"\nWrote {RESULTS_DIR / 'model_comparison.csv'}")
+    print(f"\nWrote {comp_path}")
 
 
 if __name__ == "__main__":
