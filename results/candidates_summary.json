@@ -1,7 +1,7 @@
 [
   {
     "name": "cand_stack_ridge",
-    "oof_rmse": 0.5202472838006094
+    "oof_rmse": 0.5202432047550748
   },
   {
     "name": "cand_single_enet",
@@ -21,10 +21,10 @@
   },
   {
     "name": "cand_blend_invrmse",
-    "oof_rmse": 0.52288988413408
+    "oof_rmse": 0.5230079010538079
   },
   {
     "name": "cand_mean",
-    "oof_rmse": 0.5229434045766216
+    "oof_rmse": 0.52305806558476
   }
 ]

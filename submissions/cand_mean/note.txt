@@ -1,2 +1,2 @@
-Equal-weight mean of all 12 models.
-OOF RMSE: 0.5229
+Equal-weight mean of all 13 models.
+OOF RMSE: 0.5231

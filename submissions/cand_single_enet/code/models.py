@@ -238,6 +238,35 @@ def build_huber(seed: int = SEED) -> Pipeline:
     )
 
 
+def build_lgbm_mae(seed: int = SEED) -> Pipeline:
+    """LightGBM with MAE (L1) objective. Predictions optimize median rather
+    than mean — different inductive bias from MSE → less correlated OOF
+    that should help stacking."""
+    from lightgbm import LGBMRegressor
+
+    return Pipeline(
+        [
+            ("prep", build_tree_preprocessor()),
+            (
+                "model",
+                LGBMRegressor(
+                    objective="mae",
+                    n_estimators=500,
+                    learning_rate=0.03,
+                    num_leaves=20,
+                    min_child_samples=30,
+                    subsample=0.8,
+                    subsample_freq=1,
+                    colsample_bytree=0.8,
+                    random_state=seed,
+                    verbosity=-1,
+                    n_jobs=-1,
+                ),
+            ),
+        ]
+    )
+
+
 def build_bag_enet(seed: int = SEED) -> Pipeline:
     """Bagging ElasticNet — 15 bootstrap copies, averaged. Variance reduction
     on the new champion model."""
@@ -309,6 +338,7 @@ MODEL_REGISTRY: dict[str, Callable[[int], Pipeline]] = {
     "hgbr": build_hgbr,
     "bag_enet": build_bag_enet,
     "bag_ridge": build_bag_ridge,
+    "lgbm_mae": build_lgbm_mae,
 }
 
 
@@ -384,4 +414,11 @@ def param_grid(name: str) -> dict[str, list]:
     if name in ("bag_enet", "bag_ridge"):
         # Tiny grid: just sample fraction. 3 fits.
         return {"model__max_samples": [0.6, 0.8, 1.0]}
+    if name == "lgbm_mae":
+        return {
+            "model__n_estimators": [500, 1000],
+            "model__learning_rate": [0.02, 0.05],
+            "model__num_leaves": [15, 31],
+            "model__min_child_samples": [20, 50],
+        }
     raise KeyError(f"Unknown model: {name}")
