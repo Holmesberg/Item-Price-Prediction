@@ -1,0 +1,6 @@
+model,cv_rmse_mean,cv_rmse_std,oof_rmse,fit_seconds,best_params
+ridge,0.53149,0.01175,0.53162,0.8,{'model__alpha': 10.0}
+rf,0.53521,0.01365,0.53538,39.4,"{'model__max_depth': 12, 'model__min_samples_leaf': 5, 'model__n_estimators': 500}"
+nn,0.54709,0.01616,0.54733,50.9,"{'model__dropout': 0.1, 'model__hidden': 128, 'model__lr': 0.0005}"
+lgbm,0.55201,0.01503,0.55221,167.8,"{'model__learning_rate': 0.05, 'model__min_child_samples': 5, 'model__n_estimators': 500, 'model__num_leaves': 31}"
+knn,0.55684,0.01642,0.55708,2.4,"{'model__n_neighbors': 50, 'model__weights': 'distance'}"

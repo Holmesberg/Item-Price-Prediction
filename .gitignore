@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.egg-info/
+
+# Project-specific generated/regenerated artifacts
+report/_report_rendered.md
+results/best_*.joblib
+results/oof_*.npy
+
+# Big binaries we don't need versioned
+*.docx
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+
+# Local secrets (defensive — none expected in repo, but just in case)
+.env
+*.pem
+**/access_token
+**/kaggle.json
