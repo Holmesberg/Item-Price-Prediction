@@ -1,0 +1,1 @@
+Variance-calibrated cand_stack_ridge: shifted/scaled to match train Y (mean=7.30, std=1.01). Clipped to [3.5, 9.4].
