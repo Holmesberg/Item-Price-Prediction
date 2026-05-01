@@ -22,7 +22,8 @@ import optuna
 import pandas as pd
 from sklearn.model_selection import KFold, cross_val_predict, cross_val_score
 
-from .config import RESULTS_DIR, SEED, TRAIN_CSV, set_global_seed
+from .config import RESULTS_DIR, SEED, TEST_CSV, TRAIN_CSV, set_global_seed
+from .features import BigMartFeatures
 from .models import build_lgbm
 
 
@@ -58,6 +59,7 @@ def main() -> None:
     df = pd.read_csv(TRAIN_CSV)
     X = df.drop(columns=["Y"])
     y = df["Y"].astype(float)
+    BigMartFeatures.EXTRA_COUNT_REF = pd.read_csv(TEST_CSV)
     cv = KFold(n_splits=5, shuffle=True, random_state=SEED)
 
     sampler = optuna.samplers.TPESampler(seed=SEED)

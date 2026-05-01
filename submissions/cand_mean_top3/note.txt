@@ -1,0 +1,2 @@
+Equal-weight mean of top-3 by OOF RMSE: ['ridge', 'ridge_poly', 'xgb']
+OOF RMSE: 0.52175

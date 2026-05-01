@@ -1,0 +1,10 @@
+NNLS-constrained meta. OOF RMSE: 0.52127
+Weights:
+  catboost   0.0000
+  knn        0.0000
+  lgbm       0.0000
+  nn         0.0240
+  rf         0.0000
+  ridge      0.6995
+  ridge_poly 0.0000
+  xgb        0.2765

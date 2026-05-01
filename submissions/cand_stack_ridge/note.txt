@@ -1,13 +1,13 @@
 RidgeCV meta-learner on full OOF stack.
 Meta alpha: 1.0000
-OOF RMSE: 0.5205
-Intercept: -0.0643
+OOF RMSE: 0.5211
+Intercept: -0.0551
 Meta weights:
-  catboost   -0.0189
-  knn        -0.0336
-  lgbm       -0.0615
-  nn         +0.0804
-  rf         -0.0263
-  ridge      +0.6257
-  ridge_poly -0.0973
-  xgb        +0.5409
+  catboost   +0.0219
+  knn        -0.0168
+  lgbm       -0.1502
+  nn         +0.0353
+  rf         +0.0138
+  ridge      +0.7484
+  ridge_poly -0.0353
+  xgb        +0.3907

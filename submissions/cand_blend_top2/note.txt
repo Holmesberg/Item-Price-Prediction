@@ -1,2 +1,2 @@
-Top-2 inverse-RMSE blend: ridge (0.500) + xgb (0.500)
-OOF RMSE: 0.5209
+Top-2 inverse-RMSE blend: ridge (0.501) + ridge_poly (0.499)
+OOF RMSE: 0.5223

@@ -26,10 +26,12 @@ from .config import (
     SEED,
     SUBMISSIONS_DIR,
     TEST_CSV,
+    TRAIN_CSV,
     Y_LOG_MAX,
     Y_LOG_MIN,
     set_global_seed,
 )
+from .features import BigMartFeatures
 
 
 def _load_best(name: str):
@@ -101,6 +103,11 @@ def main() -> None:
     set_global_seed(SEED)
     test_df = pd.read_csv(TEST_CSV)
     n_test = len(test_df)
+    # The trained pipelines have count statistics baked in already (with
+    # train+test pooled), so submit.predict() doesn't need EXTRA_COUNT_REF.
+    # But other scripts that re-fit do — set it defensively here for any
+    # downstream re-fit path.
+    BigMartFeatures.EXTRA_COUNT_REF = test_df
 
     comp = pd.read_csv(RESULTS_DIR / "model_comparison.csv").sort_values(
         "cv_rmse_mean"

@@ -1,11 +1,11 @@
 model,cv_rmse_mean,cv_rmse_std,oof_rmse,fit_seconds,best_params
 ridge,0.5216,0.01201,0.52174,1.8,{'model__alpha': 10.0}
 ridge_decomp,0.52165,0.01178,0.52165,2.2,{'model__alpha': 30.0}
-xgb,0.52238,0.012,0.52252,72.0,"{'n_estimators': 704, 'learning_rate': 0.1810785834530819, 'max_depth': 3, 'min_child_weight': 14, 'subsample': 0.6542346118315185, 'colsample_bytree': 0.6944528432924022, 'reg_alpha': 5.836286601397753e-08, 'reg_lambda': 5.657338508512538e-08, 'gamma': 3.491243231159474}"
 ridge_poly,0.52309,0.01113,0.52321,1.9,{'model__alpha': 100.0}
-lgbm,0.52646,0.01184,0.52659,434.7,"{'n_estimators': 357, 'learning_rate': 0.015457424232386578, 'num_leaves': 18, 'min_child_samples': 33, 'reg_alpha': 3.738425892816665e-06, 'reg_lambda': 0.014762390709189041, 'subsample': 0.7721654847357287, 'colsample_bytree': 0.8478135772534396}"
+xgb,0.52428,0.01207,0.52442,125.7,"{'n_estimators': 232, 'learning_rate': 0.08285969532148683, 'max_depth': 10, 'min_child_weight': 35, 'subsample': 0.8598283564401406, 'colsample_bytree': 0.6898810916195833, 'reg_alpha': 2.688559321396769e-07, 'reg_lambda': 3.341467005810035e-08, 'gamma': 2.8334340919133427}"
+lgbm,0.52695,0.01208,0.52709,554.6,"{'n_estimators': 357, 'learning_rate': 0.015457424232386578, 'num_leaves': 18, 'min_child_samples': 33, 'reg_alpha': 3.738425892816665e-06, 'reg_lambda': 0.014762390709189041, 'subsample': 0.7721654847357287, 'colsample_bytree': 0.8478135772534396}"
 rf,0.53431,0.01346,0.53447,54.4,"{'model__max_depth': 12, 'model__min_samples_leaf': 5, 'model__n_estimators': 500}"
 lgbm_decomp,0.53465,0.01295,0.53465,252.9,"{'model__learning_rate': 0.02, 'model__min_child_samples': 10, 'model__n_estimators': 1000, 'model__num_leaves': 15}"
-knn,0.54041,0.01577,0.54064,3.3,"{'model__n_neighbors': 50, 'model__weights': 'distance'}"
-catboost,0.54466,0.01063,0.54477,24.3,"{'iterations': 2000, 'learning_rate': 0.03, 'depth': 6}"
-nn,0.54508,0.01294,0.54523,58.5,"{'model__dropout': 0.3, 'model__hidden': 128, 'model__lr': 0.0005}"
+knn,0.54069,0.01545,0.54091,4.2,"{'model__n_neighbors': 50, 'model__weights': 'distance'}"
+catboost,0.5444,0.01557,0.54462,32.0,"{'iterations': 2000, 'learning_rate': 0.03, 'depth': 6}"
+nn,0.54824,0.01331,0.5484,64.1,"{'model__dropout': 0.1, 'model__hidden': 128, 'model__lr': 0.001}"

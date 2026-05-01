@@ -39,6 +39,7 @@ from .config import (
     Y_LOG_MIN,
     set_global_seed,
 )
+from .features import BigMartFeatures
 
 
 def _load_oofs() -> tuple[list[str], np.ndarray]:
@@ -87,6 +88,7 @@ def main() -> None:
     test_df = pd.read_csv(TEST_CSV)
     n_test = len(test_df)
     y_tr = _y_train()
+    BigMartFeatures.EXTRA_COUNT_REF = test_df
 
     names, oof_stack = _load_oofs()
     print(f"Base models: {names}")
@@ -195,6 +197,20 @@ def main() -> None:
         "cand_mean", mean_test, n_test,
         note=f"Equal-weight mean of all {len(names)} models.\nOOF RMSE: {rmse_mean:.4f}",
     )
+
+    # ----- cand_pseudo_blend: best stack + pseudo-Ridge prediction -----
+    pseudo_path = RESULTS_DIR / "pseudo_ridge_test_pred.npy"
+    if pseudo_path.exists():
+        pseudo_test = np.load(pseudo_path)
+        # Equal-weight blend of stacked-Ridge meta and pseudo-Ridge.
+        pseudo_blend = 0.5 * stack_test + 0.5 * pseudo_test
+        _sanity(pseudo_blend, "pseudo_blend")
+        _write_candidate(
+            "cand_pseudo_blend", pseudo_blend, n_test,
+            note=f"50/50 blend of cand_stack_ridge + pseudo-labeled Ridge.\n"
+                 f"OOF RMSE for stack alone: {stack_rmse:.5f}\n"
+                 f"(pseudo has no aligned OOF — augmented training set)",
+        )
 
     # ----- cand_mean_top4 + cand_geomean_top4 -----
     top4 = [sorted_by_rmse[i][0] for i in range(min(4, len(sorted_by_rmse)))]

@@ -1,1 +1,1 @@
-Best single model by OOF RMSE: ridge (0.5217)
+Best single model by OOF RMSE: ridge (0.5216)

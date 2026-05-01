@@ -26,7 +26,8 @@ import pandas as pd
 from sklearn.model_selection import KFold, cross_val_predict, cross_val_score
 from sklearn.pipeline import Pipeline
 
-from .config import RESULTS_DIR, SEED, TRAIN_CSV, set_global_seed
+from .config import RESULTS_DIR, SEED, TEST_CSV, TRAIN_CSV, set_global_seed
+from .features import BigMartFeatures
 from .preprocessing import build_tree_preprocessor
 
 
@@ -62,6 +63,7 @@ def main() -> None:
     df = pd.read_csv(TRAIN_CSV)
     X = df.drop(columns=["Y"])
     y = df["Y"].astype(float)
+    BigMartFeatures.EXTRA_COUNT_REF = pd.read_csv(TEST_CSV)
     cv = KFold(n_splits=5, shuffle=True, random_state=SEED)
 
     pipe = build_catboost(n_iterations=n_iter)

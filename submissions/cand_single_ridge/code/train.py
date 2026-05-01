@@ -22,7 +22,8 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import GridSearchCV, KFold, cross_val_predict
 
-from .config import RESULTS_DIR, SEED, TRAIN_CSV, set_global_seed
+from .config import RESULTS_DIR, SEED, TEST_CSV, TRAIN_CSV, set_global_seed
+from .features import BigMartFeatures
 from .models import MODEL_REGISTRY, param_grid
 
 
@@ -38,6 +39,13 @@ def main() -> None:
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     X, y = load_train()
+
+    # Pool test.csv X-columns into the count-encoder statistics. Y is never
+    # touched from test (only X-features), so this is a leakage-safe
+    # unsupervised augmentation that gives us sharper rare-item signal.
+    test_X = pd.read_csv(TEST_CSV)
+    BigMartFeatures.EXTRA_COUNT_REF = test_X
+    print(f"  pooling test.csv ({len(test_X)} rows) into count statistics")
     cv = KFold(n_splits=5, shuffle=True, random_state=SEED)
     rows: list[dict] = []
 
