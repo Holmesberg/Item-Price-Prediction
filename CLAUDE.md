@@ -65,3 +65,34 @@ report/        # PDF + figures
 - When writing models, set the seed in **every** stochastic step (`train_test_split`, `RandomForestRegressor(random_state=...)`, `xgboost` `seed=`, `numpy`, `random`). One missed spot = non-reproducible top-2 submission.
 - Validation strategy: a single fixed `train_test_split(..., random_state=SEED)` is fine for this scope; KFold is nicer for the report's model-comparison table but not required. Pick one and use it consistently across all 4 models so the comparison is honest.
 - When generating a submission, write `row_id` as 0..N-1 in test.csv row order and `Y` in the same log space as training. Sanity-check that submission `Y` falls in roughly [3, 10] before saving.
+
+## Session continuity
+
+A comprehensive handoff document with full project state, model lineup,
+candidate submissions, what worked / didn't, and open action items lives at
+`HANDOFF.md` in this repo. Read it after this file when starting a new session.
+
+## Diagnostics (already established — do not re-derive)
+
+These were diagnosed during the modeling phase. Future sessions should treat them as facts and frame work around them, not re-investigate.
+
+1. **Test-set X1 overlap with train: 99.3%** (only 17/2523 unseen items).
+   The problem is dominated by per-item mean estimation, not feature
+   engineering or model architecture. Any reasonable regularizer solves it.
+
+2. **All reasonable models converge.** OOF correlation matrix across
+   13 trained models (Ridge, ENet, Bridge, Huber, LGBM, XGB, RF, HGBR,
+   CatBoost, KNN, NN, RidgePoly, LGBM-MAE) shows >0.98 pairwise
+   correlation, with most >0.99. Adding more models is futile.
+
+3. **CV-LB gap is reverse-direction (CV ~0.52, LB ~0.379).** Not
+   leakage. CV folds randomly distribute rare-X1 rows into validation;
+   test set is concentrated on well-represented items. The hard cases
+   are over-represented in CV, under-represented in LB.
+
+4. **Leaderboard top-3 tied at 0.371.** Reflects the noise floor
+   imposed by (1). Realistic ceiling for any submission is ~0.371-0.375.
+
+Implication: pick final submissions by **LB score, not CV**. The CV
+ranking is informative but optimistically biased toward complex models
+that handle rare X1 well — irrelevant for the test distribution.
