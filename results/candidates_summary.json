@@ -1,30 +1,30 @@
 [
   {
     "name": "cand_stack_ridge",
-    "oof_rmse": 0.5211437770601084
+    "oof_rmse": 0.5202472838006094
   },
   {
-    "name": "cand_single_ridge",
-    "oof_rmse": 0.5216132886425318
+    "name": "cand_single_enet",
+    "oof_rmse": 0.5206916378563283
   },
   {
     "name": "cand_blend_top2",
-    "oof_rmse": 0.5222589520144091
-  },
-  {
-    "name": "cand_mean_top4",
-    "oof_rmse": 0.5222694220133739
+    "oof_rmse": 0.5208314867734398
   },
   {
     "name": "cand_blend_uncorr",
-    "oof_rmse": 0.5225913464622131
+    "oof_rmse": 0.5211698285440178
+  },
+  {
+    "name": "cand_mean_top4",
+    "oof_rmse": 0.5211924545386359
   },
   {
     "name": "cand_blend_invrmse",
-    "oof_rmse": 0.5242044611847493
+    "oof_rmse": 0.52288988413408
   },
   {
     "name": "cand_mean",
-    "oof_rmse": 0.5242696361654167
+    "oof_rmse": 0.5229434045766216
   }
 ]

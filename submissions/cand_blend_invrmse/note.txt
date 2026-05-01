@@ -1,11 +1,15 @@
-Inverse-OOF-RMSE blend of all 8 base models.
-OOF RMSE: 0.5242
+Inverse-OOF-RMSE blend of all 12 base models.
+OOF RMSE: 0.5229
 Weights:
-  catboost   0.1223
-  knn        0.1232
-  lgbm       0.1264
-  nn         0.1215
-  rf         0.1249
-  ridge      0.1277
-  ridge_poly 0.1271
-  xgb        0.1270
+  bridge     0.0847
+  catboost   0.0811
+  enet       0.0849
+  hgbr       0.0827
+  huber      0.0844
+  knn        0.0817
+  lgbm       0.0838
+  nn         0.0806
+  rf         0.0828
+  ridge      0.0847
+  ridge_poly 0.0843
+  xgb        0.0843

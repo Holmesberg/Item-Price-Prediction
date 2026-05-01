@@ -1,10 +1,14 @@
-NNLS-constrained meta. OOF RMSE: 0.52127
+NNLS-constrained meta. OOF RMSE: 0.52061
 Weights:
+  bridge     0.0285
   catboost   0.0000
+  enet       0.7989
+  hgbr       0.0000
+  huber      0.0690
   knn        0.0000
   lgbm       0.0000
-  nn         0.0240
-  rf         0.0000
-  ridge      0.6995
+  nn         0.0230
+  rf         0.0026
+  ridge      0.0725
   ridge_poly 0.0000
-  xgb        0.2765
+  xgb        0.0056

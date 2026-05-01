@@ -9,9 +9,17 @@ from __future__ import annotations
 from typing import Callable
 
 from sklearn.compose import ColumnTransformer
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import (
+    HistGradientBoostingRegressor,
+    RandomForestRegressor,
+)
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import (
+    BayesianRidge,
+    ElasticNet,
+    HuberRegressor,
+    Ridge,
+)
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import (
@@ -201,6 +209,53 @@ def build_ridge_poly(seed: int = SEED) -> Pipeline:
     )
 
 
+def build_enet(seed: int = SEED) -> Pipeline:
+    return Pipeline(
+        [
+            ("prep", build_linear_preprocessor()),
+            ("model", ElasticNet(alpha=0.001, l1_ratio=0.9, random_state=seed, max_iter=50000, tol=1e-5)),
+        ]
+    )
+
+
+def build_bridge(seed: int = SEED) -> Pipeline:
+    # BayesianRidge auto-tunes alpha; doesn't take a random_state.
+    return Pipeline(
+        [
+            ("prep", build_linear_preprocessor()),
+            ("model", BayesianRidge(max_iter=300)),
+        ]
+    )
+
+
+def build_huber(seed: int = SEED) -> Pipeline:
+    return Pipeline(
+        [
+            ("prep", build_linear_preprocessor()),
+            ("model", HuberRegressor(epsilon=1.35, alpha=0.01, max_iter=1000)),
+        ]
+    )
+
+
+def build_hgbr(seed: int = SEED) -> Pipeline:
+    return Pipeline(
+        [
+            ("prep", build_tree_preprocessor()),
+            (
+                "model",
+                HistGradientBoostingRegressor(
+                    max_iter=500,
+                    learning_rate=0.05,
+                    max_leaf_nodes=31,
+                    min_samples_leaf=20,
+                    l2_regularization=1.0,
+                    random_state=seed,
+                ),
+            ),
+        ]
+    )
+
+
 MODEL_REGISTRY: dict[str, Callable[[int], Pipeline]] = {
     "ridge": build_ridge,
     "ridge_poly": build_ridge_poly,
@@ -209,6 +264,10 @@ MODEL_REGISTRY: dict[str, Callable[[int], Pipeline]] = {
     "knn": build_knn,
     "nn": build_nn,
     "xgb": build_xgb,
+    "enet": build_enet,
+    "bridge": build_bridge,
+    "huber": build_huber,
+    "hgbr": build_hgbr,
 }
 
 
@@ -257,5 +316,28 @@ def param_grid(name: str) -> dict[str, list]:
             "model__learning_rate": [0.05, 0.1],
             "model__max_depth": [4, 6, 8],
             "model__min_child_weight": [1, 5],
+        }
+    if name == "enet":
+        # Iter 2: previous best 0.5206 at alpha=0.003 l1_ratio=0.85.
+        # Refine around that point.
+        return {
+            "model__alpha": [0.002, 0.003, 0.005, 0.008, 0.012],
+            "model__l1_ratio": [0.78, 0.85, 0.92],
+        }
+    if name == "bridge":
+        # BayesianRidge auto-tunes; no grid (single fit).
+        return {}
+    if name == "huber":
+        return {
+            "model__alpha": [0.001, 0.01, 0.1],
+            "model__epsilon": [1.1, 1.35, 1.5],
+        }
+    if name == "hgbr":
+        # 12 combos × 5 folds — conservative, hgbr is the slowest new model.
+        return {
+            "model__max_iter": [500],
+            "model__learning_rate": [0.03, 0.05],
+            "model__max_leaf_nodes": [15, 31, 63],
+            "model__l2_regularization": [0.0, 1.0],
         }
     raise KeyError(f"Unknown model: {name}")

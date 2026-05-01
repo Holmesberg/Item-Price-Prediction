@@ -1,2 +1,2 @@
-Equal-weight mean of top-4: ['ridge', 'ridge_poly', 'xgb', 'lgbm']
-OOF RMSE: 0.5223
+Equal-weight mean of top-4: ['enet', 'ridge', 'bridge', 'huber']
+OOF RMSE: 0.5212
