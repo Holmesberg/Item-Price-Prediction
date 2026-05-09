@@ -1,6 +1,6 @@
-model,cv_rmse_mean,cv_rmse_std,oof_rmse,fit_seconds,best_params
-lasso_te200,0.52029,0.01125,0.52041,0.7,{}
-xgb,0.52428,0.01207,0.52442,125.7,"{'n_estimators': 232, 'learning_rate': 0.08285969532148683, 'max_depth': 10, 'min_child_weight': 35, 'subsample': 0.8598283564401406, 'colsample_bytree': 0.6898810916195833, 'reg_alpha': 2.688559321396769e-07, 'reg_lambda': 3.341467005810035e-08, 'gamma': 2.8334340919133427}"
-lgbm,0.52695,0.01208,0.52709,554.6,"{'n_estimators': 357, 'learning_rate': 0.015457424232386578, 'num_leaves': 18, 'min_child_samples': 33, 'reg_alpha': 3.738425892816665e-06, 'reg_lambda': 0.014762390709189041, 'subsample': 0.7721654847357287, 'colsample_bytree': 0.8478135772534396}"
-rf,0.53431,0.01346,0.53447,54.4,"{'n_estimators': 500, 'max_depth': 12, 'min_samples_leaf': 5}"
-nn,0.54824,0.01331,0.5484,64.1,"{'hidden': 128, 'dropout': 0.1, 'lr': 0.001}"
+model,oof_mae,oof_rmse,fit_seconds,best_params
+quantile_mae,0.39627,0.52504,8.9,{}
+lasso_te200,0.40152,0.52041,0.7,{}
+xgb,0.40593,0.52442,125.7,"{'n_estimators': 232, 'learning_rate': 0.08285969532148683, 'max_depth': 10, 'min_child_weight': 35, 'subsample': 0.8598283564401406, 'colsample_bytree': 0.6898810916195833, 'reg_alpha': 2.688559321396769e-07, 'reg_lambda': 3.341467005810035e-08, 'gamma': 2.8334340919133427}"
+lgbm,0.40813,0.52709,554.6,"{'n_estimators': 357, 'learning_rate': 0.015457424232386578, 'num_leaves': 18, 'min_child_samples': 33, 'reg_alpha': 3.738425892816665e-06, 'reg_lambda': 0.014762390709189041, 'subsample': 0.7721654847357287, 'colsample_bytree': 0.8478135772534396}"
+rf,0.41429,0.53351,54.4,"{'n_estimators': 500, 'max_depth': 12, 'min_samples_leaf': 5}"
