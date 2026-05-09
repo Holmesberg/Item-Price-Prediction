@@ -4,6 +4,347 @@ This document is the end-to-end explanation of the repository as of May 9,
 2026. Use it to prepare for a project discussion, viva, practical exam, or
 code walkthrough.
 
+## How To Use This Guide
+
+If you are already comfortable with machine learning competitions, skim the
+first few sections and focus on the model lineup, leakage control, and
+leaderboard calibration.
+
+If you are newer to ML, read in this order:
+
+1. Read **Prerequisite Knowledge**.
+2. Read **Glossary Of Terms**.
+3. Read **The Project In One Picture**.
+4. Read **Problem Summary**.
+5. Read **Feature Engineering**, **Preprocessing Pipelines**, and **Final Model
+   Lineup**.
+6. End with **What To Say In A Presentation** and **Questions You May Be
+   Asked**.
+
+The main thing to understand is not every code detail. The main thing is the
+story:
+
+> This is a tabular prediction problem where item identity is the strongest
+> signal. The pipeline safely encodes item information, compares a small set of
+> models, and uses a calibrated lasso submission as the best public-LB result.
+
+## Prerequisite Knowledge
+
+You should be comfortable with these ideas before discussing the project.
+
+### 1. Supervised Learning
+
+Supervised learning means the training data has examples with known answers.
+
+In this project:
+
+- Input features: columns like `X1`, `X2`, `X3`, ..., `X11`.
+- Target/label: `Y`.
+- Goal: learn a function that maps input features to `Y`.
+
+Plain-English version:
+
+> We show the model many rows where the answer is known. Later, we ask it to
+> predict the answer for rows where the answer is hidden.
+
+### 2. Regression
+
+Regression means predicting a number.
+
+This project is regression because `Y` is numeric. It is not classification
+because there are no classes like "yes/no" or "category A/B/C".
+
+### 3. Tabular Data
+
+Tabular data is spreadsheet-like data:
+
+```text
+row | X1    | X2  | X3      | ... | Y
+0   | FDA15 | 9.3 | Low Fat | ... | 8.23
+1   | DRC01 | 5.9 | Regular | ... | 6.09
+```
+
+Each row is one item/outlet example. Each column is a property of that example.
+
+### 4. Train/Test Split
+
+`train.csv` has rows where `Y` is known. The model learns from these rows.
+
+`test.csv` has rows where `Y` is hidden. The model predicts these rows and
+writes a Kaggle submission.
+
+### 5. Validation
+
+Validation means pretending some training rows are "hidden" so we can test the
+model locally.
+
+We cannot see the true `Y` for Kaggle test rows, so validation gives us an
+estimate of how well the model might perform.
+
+### 6. Overfitting
+
+Overfitting means the model memorizes training data too closely and performs
+badly on new data.
+
+Example:
+
+- Good: "Items of this type in this outlet usually sell around this range."
+- Bad: "This exact training row had this exact target, so I will memorize it."
+
+Target encoding and leaderboard calibration both need careful explanation
+because they can overfit if done incorrectly.
+
+### 7. Leakage
+
+Leakage means accidentally using information during training that would not be
+available at prediction time.
+
+The dangerous version:
+
+> Computing a target-encoded value for a row using that same row's `Y`.
+
+The safe version:
+
+> Computing encodings inside CV folds, so validation rows are encoded using
+> only the training part of that fold.
+
+Leakage is one of the most important things your instructor may ask about.
+
+## Glossary Of Terms
+
+### Feature
+
+A feature is an input column used by the model.
+
+Examples:
+
+- `X1`: item ID.
+- `X6`: price/MRP-like value.
+- `Outlet_Years`: engineered outlet age feature.
+
+### Target / Label
+
+The target is the value we want to predict. Here it is `Y`.
+
+### Prediction
+
+A prediction is the model's estimated `Y` for a row.
+
+### Model
+
+A model is the algorithm that learns patterns from the training data.
+
+Examples in this repo:
+
+- Lasso/ElasticNet.
+- Quantile regression.
+- Random forest.
+- LightGBM.
+- XGBoost.
+
+### Pipeline
+
+An sklearn `Pipeline` chains steps together.
+
+In this project, a pipeline usually means:
+
+```text
+raw data -> feature engineering -> encoding/scaling -> model -> prediction
+```
+
+Why pipelines matter:
+
+- They keep preprocessing and modeling together.
+- They make CV safer.
+- They reduce accidental leakage.
+
+### Cross-Validation (CV)
+
+Cross-validation splits the training data into folds. The model trains on some
+folds and validates on the remaining fold.
+
+This repo uses 5-fold CV:
+
+```text
+Fold 1: validate on part 1, train on parts 2-5
+Fold 2: validate on part 2, train on parts 1,3,4,5
+...
+Fold 5: validate on part 5, train on parts 1-4
+```
+
+### OOF Predictions
+
+OOF means out-of-fold.
+
+An OOF prediction for a training row is made by a model that did not train on
+that row. This gives a more honest local estimate than predicting on the same
+data used for training.
+
+### MAE
+
+MAE means Mean Absolute Error.
+
+Formula:
+
+```text
+MAE = average(|actual Y - predicted Y|)
+```
+
+If actual `Y = 8.0` and predicted `Y = 7.7`, the absolute error is `0.3`.
+
+Kaggle uses MAE for this competition.
+
+### RMSE
+
+RMSE means Root Mean Squared Error.
+
+Formula:
+
+```text
+RMSE = sqrt(average((actual Y - predicted Y)^2))
+```
+
+RMSE punishes large errors more strongly than MAE. Earlier project work used a
+lot of RMSE diagnostics, but the final competition metric is MAE.
+
+### Public Leaderboard (Public LB)
+
+Kaggle reveals a score on part of the hidden test set. That is the public
+leaderboard score.
+
+Important caveat:
+
+> A better public score does not always mean better true generalization,
+> because it is only one slice of the test data.
+
+### Private Leaderboard
+
+Some competitions reveal a final private score after the deadline. If this
+competition uses a hidden/private split, public-LB calibration may not transfer
+perfectly.
+
+### Target Encoding
+
+Target encoding replaces a category with a target statistic.
+
+Example:
+
+If item `FDA15` usually has target around `8.2`, target encoding gives `FDA15`
+a numeric value near `8.2`.
+
+Why it is useful:
+
+- `X1` has many item IDs.
+- One-hot encoding every item can be sparse/noisy.
+- Target encoding gives the model a compact item-level signal.
+
+Why it is dangerous:
+
+- If done incorrectly, it can leak the target.
+
+How this repo handles it:
+
+- Target encoding is inside sklearn pipelines.
+- It uses cross-fitting.
+- Validation rows do not encode themselves using their own target.
+
+### Regularization
+
+Regularization is a penalty that keeps a model from fitting noise too strongly.
+
+Plain-English version:
+
+> Regularization tells the model: learn the pattern, but do not trust every tiny
+> fluctuation in the training data.
+
+Lasso and ElasticNet are regularized linear models.
+
+### Lasso
+
+Lasso is a linear regression model with L1 regularization.
+
+Why useful here:
+
+- It works well with many encoded features.
+- It can shrink less useful feature weights toward zero.
+- It is stable on small-to-medium tabular data.
+
+### Quantile Regression
+
+Quantile regression predicts a quantile of the target distribution.
+
+This repo uses `quantile=0.5`, which predicts the median.
+
+Why this matters:
+
+- The median is naturally connected to MAE.
+- For absolute error, predicting the median can be better than predicting the
+  mean.
+
+### Random Forest
+
+A random forest is many decision trees averaged together.
+
+It is useful as a nonlinear baseline, but here it did not beat the linear
+models.
+
+### Gradient Boosting
+
+Gradient boosting builds trees sequentially, where each new tree tries to fix
+errors from previous trees.
+
+LightGBM and XGBoost are gradient boosting libraries.
+
+## The Project In One Picture
+
+Here is the whole project as a data flow:
+
+```text
+train.csv + test.csv
+        |
+        v
+BigMartFeatures
+  - clean categories
+  - impute missing values
+  - create counts and outlet/item features
+        |
+        v
+Preprocessing
+  - scale numeric features for linear models
+  - encode categorical features
+  - target-encode high-cardinality features safely
+        |
+        v
+Models
+  - lasso_te200
+  - quantile_mae
+  - rf
+  - lgbm
+  - xgb
+        |
+        v
+Validation
+  - 5-fold CV
+  - OOF MAE/RMSE
+        |
+        v
+Submission
+  - fit selected model on all train rows
+  - predict all test rows
+  - write submission.csv
+        |
+        v
+Leaderboard calibration
+  - small scale/shift transform on lasso predictions
+  - best public score: 0.370
+```
+
+Beginner translation:
+
+> The code cleans the spreadsheet, turns text categories into numbers, trains a
+> few models, checks them locally, writes Kaggle files, and finally applies a
+> small adjustment to the best lasso predictions for the public leaderboard.
+
 ## Short Answer: Did We Add New Models?
 
 Yes, but only one new active model was added to the final <=5 model lineup:
@@ -56,17 +397,57 @@ The task is a BigMart-style item price/sales prediction problem. The input is
 tabular retail data with product, outlet, visibility, weight, and price-like
 features. The target column is `Y`.
 
+Beginner explanation:
+
+> Each row describes an item being sold at an outlet. We do not know the real
+> target for the test rows, so we train on historical rows and predict the
+> missing `Y` values.
+
+The columns are anonymized as `X1`, `X2`, etc., but they correspond closely to
+the well-known BigMart sales dataset. You do not need to memorize the exact
+business meaning of every column, but you should understand what kind of
+information each one carries.
+
+| Column | Type | Practical meaning in this project |
+|---|---|---|
+| `X1` | categorical | Item ID. This is the strongest signal. |
+| `X2` | numeric | Item weight-like value. Missing values are imputed by item. |
+| `X3` | categorical | Fat-content-like category, cleaned into consistent labels. |
+| `X4` | numeric | Item visibility-like value. Zeros are treated as missing. |
+| `X5` | categorical | Item type/category. |
+| `X6` | numeric | Price/MRP-like value. Very important for sales level. |
+| `X7` | categorical | Outlet/store ID. |
+| `X8` | numeric/year | Outlet establishment year. Converted to outlet age. |
+| `X9` | categorical | Outlet size. Missing values are imputed. |
+| `X10` | categorical | Outlet location tier. |
+| `X11` | categorical | Outlet type. |
+| `Y` | numeric target | The value we predict. Already log-transformed. |
+
 Important target fact:
 
 - `Y` is already log-transformed.
 - Do not apply `log1p`, `exp`, or reverse transforms before submission.
 - Kaggle evaluates MAE directly on `Y`.
 
+Why the log-transformed target matters:
+
+If the original sales value was very skewed, taking a log makes it easier for
+models to learn. But because the competition already gives us `Y` on the log
+scale, applying another log would damage the target. Our predictions must stay
+on the same scale as `Y`.
+
 Data files:
 
 - `train.csv`: 6000 labeled rows.
 - `test.csv`: 2523 unlabeled rows.
 - `sample_submission.csv`: expected submission shape.
+
+Definitions:
+
+- Labeled row: a row where we know `Y`.
+- Unlabeled row: a row where `Y` is hidden and must be predicted.
+- Submission row: a row in `submission.csv` containing a `row_id` and predicted
+  `Y`.
 
 Submission format:
 
@@ -78,6 +459,25 @@ row_id,Y
 ```
 
 The project predicts `Y` for all 2523 test rows.
+
+## What The Model Is Actually Learning
+
+The model is trying to answer questions like:
+
+- Does this item usually sell at a high or low target value?
+- Does this outlet type tend to produce higher targets?
+- Does the price/MRP-like feature `X6` suggest a larger target?
+- Is this item's visibility unusually high or low?
+- How old is the outlet?
+- Are there combinations of item type and outlet type that matter?
+
+The most important lesson from exploration was:
+
+> Item identity `X1` explains a huge amount of the target behavior.
+
+That changes the modeling strategy. Instead of needing a very complex neural
+network, we mainly need a safe way to summarize item-level information and
+regularize it so it does not overfit.
 
 ## High-Level Repository Map
 
@@ -139,6 +539,23 @@ All feature engineering lives in `src/features.py`, inside `BigMartFeatures`.
 It is an sklearn-compatible transformer, so it is fit only on the training fold
 during CV.
 
+Definition:
+
+> Feature engineering means creating better input columns from the raw data.
+
+Why we need it:
+
+Raw columns are often messy or not directly ideal for a model. For example,
+`X8` is a year, but the model usually benefits more from outlet age. So the
+code converts `X8` into `Outlet_Years = 2013 - X8`.
+
+The feature engineering here has four goals:
+
+1. Clean inconsistent text categories.
+2. Fill missing or suspicious values.
+3. Create domain-aware numeric signals.
+4. Preserve important item/outlet identity information safely.
+
 Raw numeric columns:
 
 - `X2`
@@ -185,6 +602,148 @@ Target-encoded features:
 
 - `X1`: high-cardinality item ID.
 - `X5_X11`: item type by outlet type interaction.
+
+### Step-By-Step Feature Engineering
+
+This is what `BigMartFeatures` does in plain English.
+
+### `X1_prefix`
+
+The code takes the first two characters of `X1`.
+
+Example:
+
+```text
+FDA15 -> FD
+DRC01 -> DR
+NCX06 -> NC
+```
+
+Why:
+
+- The prefix groups items into broad classes.
+- This gives the model a lower-cardinality item category.
+
+### Cleaning `X3`
+
+`X3` contains inconsistent labels, such as:
+
+- `LF`
+- `low fat`
+- `Low Fat`
+- `reg`
+- `Regular`
+
+The code maps them into consistent categories.
+
+Why:
+
+If we do not clean these, the model may think `LF` and `Low Fat` are different
+categories even though they mean the same thing.
+
+### Handling `X4` Visibility
+
+The code treats `X4 == 0` as missing.
+
+Why:
+
+In retail visibility data, a true visibility of exactly zero is suspicious.
+It often means missing or unrecorded visibility rather than "the item was
+literally impossible to see."
+
+The code fills missing `X4` values using the item's average visibility when
+possible, then falls back to the global mean.
+
+### Handling Missing `X2`
+
+`X2` is imputed by item ID `X1`.
+
+Why:
+
+If the same item appears multiple times, its weight-like value should usually
+be stable. Item-level imputation is more informative than simply using the
+global average.
+
+### `Outlet_Years`
+
+The code creates:
+
+```text
+Outlet_Years = 2013 - X8
+```
+
+Why:
+
+Models usually understand "age" more directly than "year established."
+
+### Count Features
+
+The code creates:
+
+- `X1_count`
+- `X7_count`
+- `X1_X7_count`
+
+Definition:
+
+> A count feature tells the model how frequently something appears.
+
+Why count features help:
+
+- Common items have more evidence and may be easier to predict.
+- Rare items may need stronger regularization.
+- Item-outlet frequency can indicate how familiar the training data is with
+  that exact combination.
+
+### `logX6`
+
+The code creates:
+
+```text
+logX6 = log1p(X6)
+```
+
+Important distinction:
+
+- We do not log-transform `Y` again.
+- We do create a log feature from `X6`.
+
+Why:
+
+Price/sales relationships are often multiplicative. A log-transformed price
+feature can make that relationship easier for a linear model to capture.
+
+### `X4_dev_X1`
+
+This means:
+
+```text
+current visibility - average visibility for this item
+```
+
+Why:
+
+The raw visibility value may be less informative than whether the item is more
+or less visible than usual for itself.
+
+### `X5_X11`
+
+The code creates an interaction:
+
+```text
+item type + "_" + outlet type
+```
+
+Example:
+
+```text
+Dairy_Supermarket Type1
+```
+
+Why:
+
+An item type may behave differently depending on outlet type. This feature
+captures that combined effect.
 
 ## Leakage Control
 
@@ -296,6 +855,13 @@ Why it works:
 - Target-encoded item ID plus regularized linear regression gives strong,
   stable predictions.
 
+Beginner explanation:
+
+> Lasso is like drawing a straight-line formula using many encoded features,
+> while also penalizing unnecessary feature weights. It is simple, but in this
+> dataset simple is powerful because the engineered item features already carry
+> the key signal.
+
 ### 2. `quantile_mae`
 
 Implementation:
@@ -320,6 +886,12 @@ How to explain this:
 > test distribution favored the calibrated lasso prediction vector. It was a
 > reasonable metric-driven addition, but not the final public-LB winner.
 
+Beginner explanation:
+
+> If MAE cares about absolute distance, predicting a median is often sensible.
+> That is why this model was worth adding. It made the local validation table
+> look better, but Kaggle's public split still liked the calibrated lasso more.
+
 ### 3. `rf`
 
 Implementation:
@@ -333,6 +905,11 @@ Role:
 Result:
 
 - Worse local OOF MAE than the linear models.
+
+Beginner explanation:
+
+> A random forest averages many decision trees. It can model nonlinear rules,
+> but here it did not beat the cleaner item-encoded linear approach.
 
 ### 4. `lgbm`
 
@@ -349,6 +926,12 @@ Result:
 
 - Useful as a sanity check, but not better than lasso/quantile.
 
+Beginner explanation:
+
+> LightGBM is a strong tree-boosting algorithm. It often wins tabular
+> competitions, but this dataset's main signal was already captured by item
+> target encoding, so boosting did not add enough extra value.
+
 ### 5. `xgb`
 
 Implementation:
@@ -364,6 +947,12 @@ Result:
 
 - Better than RF/LGBM locally, but still not better than the linear family.
 
+Beginner explanation:
+
+> XGBoost is another strong boosted-tree method. It was useful for comparison,
+> but it also made predictions very similar to the linear models and did not
+> beat calibrated lasso.
+
 ## Current Local Model Comparison
 
 From `results/model_comparison.csv`:
@@ -376,6 +965,22 @@ From `results/model_comparison.csv`:
 | `lgbm` | 0.40813 | 0.52709 | Tuned boosting baseline |
 | `rf` | 0.41429 | 0.53351 | Tree baseline |
 
+How to read this table:
+
+- Lower MAE is better because Kaggle evaluates MAE.
+- `OOF MAE` estimates validation performance using out-of-fold predictions.
+- `OOF RMSE` is kept as an additional diagnostic because large errors still
+  matter, even though it is not the official metric.
+- `fit_seconds` tells you roughly how expensive the model is to train.
+- `best_params` lists tuned hyperparameters, or `{}` when the factory already
+  has fixed parameters.
+
+Beginner note:
+
+> Do not say "quantile is the final best model" just because it has the best
+> OOF MAE. The final leaderboard winner is the calibrated lasso. The correct
+> statement is: quantile was best locally, calibrated lasso was best publicly.
+
 Why OOF MAE and public LB disagree:
 
 - Public LB is a specific subset of test rows.
@@ -383,6 +988,30 @@ Why OOF MAE and public LB disagree:
 - Calibration can improve public LB while worsening local OOF.
 - This is useful for leaderboard placement, but should be described honestly as
   public-leaderboard calibration, not as proof of better generalization.
+
+### Why Validation And Leaderboard Can Disagree
+
+This is a subtle but important point.
+
+In CV, the model trains on only 80 percent of the training rows in each fold.
+For some items, that means the model sees fewer examples of that item than it
+would see when trained on the full dataset.
+
+On Kaggle test rows, many item IDs also exist in the full training set. So when
+we fit on all 6000 training rows before submission, the model has stronger
+item-level evidence than it had in each CV fold.
+
+That can create this pattern:
+
+```text
+local CV looks worse
+public leaderboard looks better
+```
+
+The key explanation:
+
+> CV is pessimistic because each fold hides some item evidence. Full-train
+> submission sees more item history, and the test split has high item overlap.
 
 ## Leaderboard Calibration
 
@@ -499,6 +1128,108 @@ Conclusion:
 
 - More models were mostly redundant.
 - The bottleneck is item-mean estimation, not architecture variety.
+
+## How Training Works In The Code
+
+The main training script is `src/train.py`.
+
+Beginner-level walkthrough:
+
+1. Load `train.csv`.
+2. Split `Y` away from the input columns.
+3. Load `test.csv` so its feature columns can be used for unsupervised count
+   statistics.
+4. Create a 5-fold CV splitter.
+5. For each model in `MODEL_REGISTRY`:
+   - build the sklearn pipeline;
+   - fit it inside CV;
+   - generate OOF predictions;
+   - compute OOF MAE and OOF RMSE;
+   - save OOF predictions to `results/oof_<model>.npy`;
+   - save the fitted model to `results/best_<model>.joblib`;
+   - update `results/model_comparison.csv`.
+
+In simple terms:
+
+> `train.py` asks every final model: "How well do you predict rows you did not
+> train on?" Then it stores the answers in the results folder.
+
+### Why We Save OOF Predictions
+
+OOF predictions are useful for:
+
+- comparing models fairly;
+- analyzing residuals;
+- checking whether models make similar mistakes;
+- trying blends without retraining everything.
+
+Earlier in the project, OOF predictions showed that most models were highly
+correlated. That was one reason to remove unnecessary model complexity.
+
+### Why We Save Joblib Models
+
+`joblib` is a common way to save sklearn models.
+
+Saving `best_<model>.joblib` means we can reload a trained pipeline later and
+predict test rows without retraining.
+
+The repo ignores these files in git because they are large generated artifacts.
+
+## How A Submission Is Created
+
+A Kaggle submission is just a CSV with two columns:
+
+```text
+row_id,Y
+```
+
+For this project, a submission script usually does this:
+
+1. Load `train.csv` and `test.csv`.
+2. Fit the chosen model on all labeled training rows.
+3. Predict `Y` for all test rows.
+4. Optionally apply a calibration transform.
+5. Write `submissions/<candidate>/submission.csv`.
+6. Copy a snapshot of `src/` into `submissions/<candidate>/code/`.
+7. Write a `note.txt` explaining the candidate.
+
+The code snapshot is important because it lets us reconstruct exactly what code
+created a submission.
+
+## The Difference Between Model Improvement And Calibration
+
+This project has both model work and calibration work.
+
+Model improvement means changing the learning algorithm or features.
+
+Examples:
+
+- adding `quantile_mae`;
+- tuning XGBoost;
+- changing target encoding smoothness;
+- adding feature engineering.
+
+Calibration means taking predictions from an existing model and adjusting them.
+
+Example:
+
+```text
+prediction = mean + scale * (prediction - mean) + shift
+```
+
+The best public score came from calibration of the lasso predictions. This is
+not the same as discovering a new model; it is post-processing.
+
+How to say it:
+
+> The base lasso model provided the best prediction direction. The final public
+> score improved after a small scale/shift calibration of that direction.
+
+Why to be careful:
+
+> Calibration is tuned using public leaderboard feedback, so it can overfit the
+> public split. It is useful for leaderboard rank, but it should be reported
+> separately from local validation results.
 
 ## Reproducibility Commands
 
@@ -655,3 +1386,59 @@ Open these in this order:
   keep the <=5 cap.
 - The best public LB result comes from calibrated lasso, not from adding more
   model complexity.
+
+## What You Should Memorize Before The Uni Discussion
+
+Memorize these points first:
+
+1. The target `Y` is already log-transformed.
+2. Kaggle evaluates MAE on `Y`.
+3. The strongest feature is item identity `X1`.
+4. Target encoding is used for high-cardinality item information.
+5. Target encoding is done inside sklearn pipelines to avoid leakage.
+6. The active final lineup has exactly five models.
+7. Only one new active model was added late: `quantile_mae`.
+8. `quantile_mae` replaced `nn` in the active registry.
+9. `quantile_mae` had the best local OOF MAE.
+10. Calibrated lasso had the best public leaderboard score.
+11. Best public score reached: `0.370`.
+12. Best submission file: `submissions/cand_lasso_scale1p05_shift0p08/submission.csv`.
+
+If you get nervous, use this compact answer:
+
+> We built a leakage-safe tabular ML pipeline. The most important signal is
+> item ID, so we used target encoding plus regularized linear models. We added
+> quantile regression because the metric is MAE, but the public leaderboard was
+> best with calibrated lasso. The final active model set stays within the
+> five-model cap.
+
+## One-Minute Beginner Explanation
+
+Here is the project explained as simply as possible:
+
+> We have a spreadsheet of products sold in stores. For some rows we know the
+> target value `Y`; for test rows we do not. The model learns from the known
+> rows and predicts the missing values. The most useful clue is the item ID,
+> because the same item often appears many times. We convert item IDs and other
+> categories into useful numbers without leaking the answer, train several
+> models, and compare them using cross-validation. A lasso model gave the best
+> leaderboard prediction after a small adjustment. We also tried quantile
+> regression because the metric is MAE; it was good locally, but not the best
+> public submission.
+
+## Two-Minute Technical Explanation
+
+Here is the slightly more technical version:
+
+> The repo implements an sklearn pipeline for a BigMart-style tabular
+> regression task. `BigMartFeatures` performs cleaning, imputation, outlet/item
+> feature engineering, frequency features, and interaction features. The
+> preprocessing layer separates numeric, low-cardinality categorical, and
+> high-cardinality target-encoded columns. Target encoding is cross-fitted and
+> placed inside the pipeline, so validation folds do not see their own target
+> values. The final model registry contains five models: lasso, quantile
+> regression, random forest, LightGBM, and XGBoost. Quantile regression was
+> added because MAE is the official metric, but the best public leaderboard
+> result came from an affine-calibrated lasso prediction vector. The calibration
+> improved public LB from 0.378 to 0.370, while the local comparison still shows
+> quantile regression as the best OOF MAE model.
