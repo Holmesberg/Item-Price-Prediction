@@ -7,5 +7,7 @@
   "prediction_mean": 7.271437028005921,
   "prediction_std": 0.874801662671486,
   "prediction_min": 4.201305266825289,
-  "prediction_max": 8.779484100172546
+  "prediction_max": 8.779484100172546,
+  "public_lb_score": 0.378,
+  "submitted_at": "2026-05-09 06:55:22 UTC"
 }
