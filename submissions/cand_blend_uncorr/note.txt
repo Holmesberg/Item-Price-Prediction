@@ -1,3 +1,0 @@
-Top + least-correlated of next 3: enet (0.501) + huber (0.499)
-OOF corr: +0.998
-OOF RMSE: 0.5212

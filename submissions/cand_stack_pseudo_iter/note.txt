@@ -1,1 +1,0 @@
-50/50 blend of cand_stack_ridge and cand_pseudo_iter.

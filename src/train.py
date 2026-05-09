@@ -1,14 +1,13 @@
-"""Train models with shared 5-fold CV + per-model GridSearch.
+"""Train the final <=5-model lineup with shared 5-fold CV.
 
 Outputs:
-  results/model_comparison.csv  — best params, CV RMSE mean/std, fit time
+  results/model_comparison.csv  — CV RMSE mean/std, fit time
   results/oof_<model>.npy       — out-of-fold predictions (in log-Y space)
-  results/best_<model>.joblib   — best-of-grid pipeline, refit on full train
+  results/best_<model>.joblib   — final tuned pipeline, refit on full train
 
 Usage:
-  python -m src.train                  # train every model in MODEL_REGISTRY
-  python -m src.train ridge_poly nn    # train only the named models, append
-                                       # rows to existing model_comparison.csv
+  python -m src.train               # train the final lineup
+  python -m src.train lasso_te200   # train only one named model
 """
 
 from __future__ import annotations

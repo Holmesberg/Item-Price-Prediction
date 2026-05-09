@@ -1,2 +1,0 @@
-Equal-weight mean of top-4: ['enet', 'ridge', 'bridge', 'huber']
-OOF RMSE: 0.5212

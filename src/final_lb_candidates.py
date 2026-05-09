@@ -36,6 +36,8 @@ from .models import build_lasso_te200
 
 CANDIDATE_NAME = "cand_lasso_te200"
 MODEL_NAME = "lasso_te200"
+KNOWN_PUBLIC_LB = 0.378
+SUBMITTED_AT = "2026-05-09 06:55:22 UTC"
 
 
 def _rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
@@ -109,6 +111,7 @@ def main() -> None:
         "Model: ElasticNet used as Lasso (alpha=0.003, l1_ratio=1.0) with "
         "TargetEncoder smooth=200.\n"
         f"OOF RMSE: {oof_rmse:.5f}.\n"
+        f"Public LB: {KNOWN_PUBLIC_LB:.3f} (submitted {SUBMITTED_AT}).\n"
         "Chosen because it beat the previous ENet single-model OOF "
         "(0.52069) without adding another model family or a risky stack."
     )
@@ -124,6 +127,8 @@ def main() -> None:
         "prediction_std": float(preds.std()),
         "prediction_min": float(preds.min()),
         "prediction_max": float(preds.max()),
+        "public_lb_score": KNOWN_PUBLIC_LB,
+        "submitted_at": SUBMITTED_AT,
     }
     (RESULTS_DIR / "final_lb_candidates.json").write_text(
         json.dumps(summary, indent=2), encoding="utf-8"

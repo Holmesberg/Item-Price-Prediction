@@ -1,18 +1,6 @@
 model,cv_rmse_mean,cv_rmse_std,oof_rmse,fit_seconds,best_params
-enet,0.52056,0.01152,0.52069,9.2,"{'model__alpha': 0.003, 'model__l1_ratio': 0.85}"
-bag_enet,0.52082,0.01156,0.52094,11.7,{'model__max_samples': 0.8}
-bag_ridge,0.52142,0.01218,0.52156,4.5,{'model__max_samples': 0.6}
-bridge,0.5215,0.01219,0.52164,1.2,{}
-ridge,0.5216,0.01201,0.52174,1.8,{'model__alpha': 10.0}
-ridge_decomp,0.52165,0.01178,0.52165,2.2,{'model__alpha': 30.0}
-ridge_poly,0.52309,0.01113,0.52321,1.9,{'model__alpha': 100.0}
-huber,0.52359,0.01408,0.52378,14.5,"{'model__alpha': 0.1, 'model__epsilon': 1.5}"
+lasso_te200,0.52029,0.01125,0.52041,0.7,{}
 xgb,0.52428,0.01207,0.52442,125.7,"{'n_estimators': 232, 'learning_rate': 0.08285969532148683, 'max_depth': 10, 'min_child_weight': 35, 'subsample': 0.8598283564401406, 'colsample_bytree': 0.6898810916195833, 'reg_alpha': 2.688559321396769e-07, 'reg_lambda': 3.341467005810035e-08, 'gamma': 2.8334340919133427}"
 lgbm,0.52695,0.01208,0.52709,554.6,"{'n_estimators': 357, 'learning_rate': 0.015457424232386578, 'num_leaves': 18, 'min_child_samples': 33, 'reg_alpha': 3.738425892816665e-06, 'reg_lambda': 0.014762390709189041, 'subsample': 0.7721654847357287, 'colsample_bytree': 0.8478135772534396}"
-lgbm_mae,0.53207,0.0139,0.53225,149.4,"{'model__learning_rate': 0.02, 'model__min_child_samples': 20, 'model__n_estimators': 500, 'model__num_leaves': 15}"
-hgbr,0.53395,0.01236,0.53409,95.4,"{'model__l2_regularization': 1.0, 'model__learning_rate': 0.03, 'model__max_iter': 500, 'model__max_leaf_nodes': 15}"
-rf,0.53431,0.01346,0.53447,54.4,"{'model__max_depth': 12, 'model__min_samples_leaf': 5, 'model__n_estimators': 500}"
-lgbm_decomp,0.53465,0.01295,0.53465,252.9,"{'model__learning_rate': 0.02, 'model__min_child_samples': 10, 'model__n_estimators': 1000, 'model__num_leaves': 15}"
-knn,0.54069,0.01545,0.54091,4.2,"{'model__n_neighbors': 50, 'model__weights': 'distance'}"
-catboost,0.5444,0.01557,0.54462,32.0,"{'iterations': 2000, 'learning_rate': 0.03, 'depth': 6}"
-nn,0.54824,0.01331,0.5484,64.1,"{'model__dropout': 0.1, 'model__hidden': 128, 'model__lr': 0.001}"
+rf,0.53431,0.01346,0.53447,54.4,"{'n_estimators': 500, 'max_depth': 12, 'min_samples_leaf': 5}"
+nn,0.54824,0.01331,0.5484,64.1,"{'hidden': 128, 'dropout': 0.1, 'lr': 0.001}"

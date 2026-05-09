@@ -1,3 +1,0 @@
-3-round iterative pseudo-labeling.
-Final ensemble of ridge+lgbm+xgb retrained 3 times on growing pseudo-aug train.
-Pred range: [4.258, 8.679]

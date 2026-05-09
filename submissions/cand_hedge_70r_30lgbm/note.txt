@@ -1,5 +1,0 @@
-70% Push-2 Ridge + 30% Optuna-LGBM. Hedge picked because LGBM is the
-best-OOF candidate decorrelated from Ridge (corr 0.995). 70/30 weights
-(not inverse-RMSE) bias toward Ridge — known LB 0.379 floor — while
-still letting LGBM influence rows where it disagrees.
-OOF RMSE: 0.52179

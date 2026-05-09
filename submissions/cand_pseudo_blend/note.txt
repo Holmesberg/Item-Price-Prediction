@@ -1,3 +1,0 @@
-50/50 blend of cand_stack_ridge + pseudo-labeled Ridge.
-OOF RMSE for stack alone: 0.52024
-(pseudo has no aligned OOF — augmented training set)
