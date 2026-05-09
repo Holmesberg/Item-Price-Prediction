@@ -1,0 +1,3 @@
+MAE-tuned median regression candidate.
+Model: QuantileRegressor(quantile=0.5, alpha=0.001) with TargetEncoder smooth=200.
+Affine calibration around test mean: scale=1.015, shift=0.018.
