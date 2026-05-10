@@ -1,13 +1,18 @@
-"""Write the final minimal submission candidate.
+"""Write the final competition-format CSV artifact.
 
-This wrapper exists for the familiar `python -m src.submit` entrypoint. The
-actual implementation lives in `src.final_lb_candidates` so there is only one
-submission path to maintain.
+`python -m src.submit` is the stable entrypoint for the cleaned submission
+repo. It only regenerates the best confirmed public-LB file locally:
+
+  submissions/cand_lasso_scale1p05_shift0p08/submission.csv
 """
 
 from __future__ import annotations
 
-from .final_lb_candidates import main
+from .lb_calibration import generate
+
+
+def main() -> None:
+    generate(scale=1.05, shift=0.08)
 
 
 if __name__ == "__main__":

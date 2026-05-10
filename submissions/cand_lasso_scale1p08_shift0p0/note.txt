@@ -1,5 +1,0 @@
-Affine leaderboard-calibration probe for lasso_te200.
-Prediction = mean(test_pred) + 1.0800 * (test_pred - mean(test_pred)) + 0.0000.
-Base OOF RMSE: 0.52041.
-Calibrated OOF RMSE: 0.52446.
-Rationale: public test has 99.3% item overlap, so full-test conditional means may be less shrunken than random-CV OOF means.

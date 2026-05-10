@@ -2,7 +2,9 @@
   "candidate": "cand_lasso_scale1p05_shift0p08",
   "scale": 1.05,
   "shift": 0.08,
+  "base_oof_mae": 0.40152156371081066,
   "base_oof_rmse": 0.5204124021757763,
+  "calibrated_oof_mae": 0.39728049771777374,
   "calibrated_oof_rmse": 0.5275598077334305,
   "submission_csv": "/mnt/d/Studies/CSE281 Intro to AI/Project/submissions/cand_lasso_scale1p05_shift0p08/submission.csv",
   "base_prediction_mean": 7.271437028005921,
@@ -10,5 +12,6 @@
   "prediction_mean": 7.351437028005919,
   "prediction_std": 0.9185417458050603,
   "prediction_min": 4.127798678766257,
-  "prediction_max": 8.934886453780877
+  "prediction_max": 8.934886453780877,
+  "public_lb_score": 0.37
 }

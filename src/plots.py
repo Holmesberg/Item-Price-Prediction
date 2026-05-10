@@ -49,7 +49,7 @@ def plot_feature_importance() -> None:
 
 def plot_residuals() -> None:
     comp = pd.read_csv(RESULTS_DIR / "model_comparison.csv")
-    top_model = comp.sort_values("cv_rmse_mean").iloc[0]["model"]
+    top_model = comp.sort_values("oof_mae").iloc[0]["model"]
     oof = np.load(RESULTS_DIR / f"oof_{top_model}.npy")
     y = pd.read_csv(TRAIN_CSV)["Y"].values
     resid = y - oof
@@ -60,13 +60,13 @@ def plot_residuals() -> None:
     axes[0].plot([lo, hi], [lo, hi], "r--", linewidth=1)
     axes[0].set_xlabel("Predicted (log Y)")
     axes[0].set_ylabel("Actual (log Y)")
-    axes[0].set_title(f"Predicted vs actual — {top_model} (OOF)")
+    axes[0].set_title(f"Predicted vs actual - {top_model} (OOF)")
 
     axes[1].hist(resid, bins=40, color="#3f72af", edgecolor="white")
     axes[1].axvline(0, color="r", linewidth=1)
     axes[1].set_xlabel("Residual (actual − predicted)")
     axes[1].set_ylabel("Count")
-    axes[1].set_title(f"Residuals — {top_model} (OOF)")
+    axes[1].set_title(f"Residuals - {top_model} (OOF)")
 
     fig.tight_layout()
     out = FIGURES_DIR / "residuals_top_model.png"

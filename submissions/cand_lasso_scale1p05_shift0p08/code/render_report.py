@@ -18,7 +18,8 @@ from .config import REPORT_DIR, RESULTS_DIR
 
 
 def _table_md(comp: pd.DataFrame) -> str:
-    cols = ["model", "cv_rmse_mean", "cv_rmse_std", "oof_rmse", "fit_seconds"]
+    preferred = ["model", "oof_mae", "oof_rmse", "fit_seconds"]
+    cols = [c for c in preferred if c in comp.columns]
     show = comp[cols].copy()
     header = "| " + " | ".join(show.columns) + " |"
     sep = "|" + "|".join(["---"] * len(show.columns)) + "|"
@@ -34,7 +35,8 @@ def _substitute_placeholder() -> Path:
     raw = src.read_text(encoding="utf-8")
     comp_path = RESULTS_DIR / "model_comparison.csv"
     if comp_path.exists():
-        comp = pd.read_csv(comp_path).sort_values("cv_rmse_mean")
+        comp = pd.read_csv(comp_path)
+        comp = comp.sort_values("oof_mae")
         block = _table_md(comp)
         raw = raw.replace("```\n{{MODEL_COMPARISON_TABLE}}\n```", block)
     else:

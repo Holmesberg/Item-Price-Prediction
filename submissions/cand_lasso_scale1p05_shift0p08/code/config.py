@@ -20,8 +20,7 @@ REPORT_DIR = ROOT / "report"
 FIGURES_DIR = REPORT_DIR / "figures"
 
 # Y is already log-transformed (range ~3.51 to ~9.40). NEVER apply log1p again.
-# RMSE on Y is assumed (== RMSLE on raw sales). Verify on the Kaggle Evaluation tab
-# before finalizing submissions.
+# Kaggle evaluates Mean Absolute Error on this Y column.
 Y_LOG_MIN = 3.0
 Y_LOG_MAX = 10.0
 
@@ -33,5 +32,5 @@ def set_global_seed(seed: int = SEED) -> None:
     random.seed(seed)
     np.random.seed(seed)
     # PYTHONHASHSEED only takes effect at interpreter startup, not when set
-    # at runtime. Reproducibility for sklearn/lightgbm/torch comes from the
-    # explicit random_state= args wired through the model factories.
+    # at runtime. Reproducibility for sklearn/lightgbm/xgboost comes from the
+    # explicit random_state args wired through the model factories.

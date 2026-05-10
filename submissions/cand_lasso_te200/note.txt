@@ -1,5 +1,0 @@
-Single-model final candidate under the 5-model cap.
-Model: ElasticNet used as Lasso (alpha=0.003, l1_ratio=1.0) with TargetEncoder smooth=200.
-OOF RMSE: 0.52041.
-Public LB: 0.378 (submitted 2026-05-09 06:55:22 UTC).
-Chosen because it beat the previous ENet single-model OOF (0.52069) without adding another model family or a risky stack.

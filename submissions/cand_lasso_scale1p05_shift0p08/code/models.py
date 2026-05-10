@@ -4,10 +4,10 @@ The exploration phase trained many extra variants. The final repo keeps only
 the five allowed/useful model families:
 
   - lasso_te200: tuned linear champion and current best public-LB submission
+  - quantile_mae: median regression for the actual MAE leaderboard metric
   - rf: random forest baseline
   - lgbm: gradient-boosted trees
   - xgb: gradient-boosted trees from a second implementation
-  - nn: small tabular neural network
 
 The tuned parameters are baked into the factories so `python -m src.train`
 refits the final lineup instead of re-running the old model zoo.
@@ -18,11 +18,10 @@ from __future__ import annotations
 from typing import Callable
 
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import ElasticNet
+from sklearn.linear_model import ElasticNet, QuantileRegressor
 from sklearn.pipeline import Pipeline
 
 from .config import SEED
-from .nn_model import SklearnNNRegressor
 from .preprocessing import build_linear_preprocessor, build_tree_preprocessor
 
 
@@ -39,6 +38,23 @@ def build_lasso_te200(seed: int = SEED) -> Pipeline:
                     random_state=seed,
                     max_iter=70000,
                     tol=1e-5,
+                ),
+            ),
+        ]
+    )
+
+
+def build_quantile_mae(seed: int = SEED) -> Pipeline:
+    """Median regression tuned for MAE instead of RMSE."""
+    return Pipeline(
+        [
+            ("prep", build_linear_preprocessor(te_smooth=200.0)),
+            (
+                "model",
+                QuantileRegressor(
+                    quantile=0.5,
+                    alpha=0.001,
+                    solver="highs",
                 ),
             ),
         ]
@@ -118,33 +134,12 @@ def build_xgb(seed: int = SEED) -> Pipeline:
     )
 
 
-def build_nn(seed: int = SEED) -> Pipeline:
-    return Pipeline(
-        [
-            ("prep", build_linear_preprocessor()),
-            (
-                "model",
-                SklearnNNRegressor(
-                    hidden=128,
-                    dropout=0.1,
-                    lr=1e-3,
-                    batch_size=64,
-                    epochs=30,
-                    early_stopping=True,
-                    patience=5,
-                    seed=seed,
-                ),
-            ),
-        ]
-    )
-
-
 MODEL_REGISTRY: dict[str, Callable[[int], Pipeline]] = {
     "lasso_te200": build_lasso_te200,
+    "quantile_mae": build_quantile_mae,
     "rf": build_rf,
     "lgbm": build_lgbm,
     "xgb": build_xgb,
-    "nn": build_nn,
 }
 
 
