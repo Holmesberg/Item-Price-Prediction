@@ -58,6 +58,8 @@ def _try_pandoc(md: Path, pdf: Path) -> bool:
         "-o",
         str(pdf),
         "--from=markdown",
+        "--resource-path",
+        str(REPORT_DIR),
         "--pdf-engine=xelatex",
         "-V",
         "geometry:margin=2.5cm",

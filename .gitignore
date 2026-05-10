@@ -9,6 +9,9 @@ __pycache__/
 report/_report_rendered.md
 results/best_*.joblib
 results/oof_*.npy
+notebook/
+notebooks/
+.ipynb_checkpoints/
 
 # Big binaries we don't need versioned
 *.docx

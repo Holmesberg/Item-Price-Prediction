@@ -154,6 +154,8 @@ as `X1_count` and `X7_count`. This uses only feature columns and never reads
 hidden labels, so it is unsupervised transductive preprocessing, not target
 leakage.
 
+\newpage
+
 # 5. Model Lineup
 
 The final repository keeps exactly five active models in `src/models.py`:
@@ -256,6 +258,8 @@ This explains three observed facts:
 3. Public leaderboard scores are better than local CV scores because full
    training uses more item history than each CV fold.
 
+\newpage
+
 # 10. Leaderboard Calibration
 
 The best raw model was `lasso_te200`, with public score `0.378`. Since the
@@ -296,7 +300,7 @@ new model family. It may not transfer perfectly to a private split.
 | Best local OOF MAE | `quantile_mae`, 0.39627 |
 | Best public leaderboard model | calibrated `lasso_te200` |
 | Best public leaderboard score | 0.370 |
-| Final submission artifact | `submissions/cand_lasso_scale1p05_shift0p08/submission.csv` |
+| Final submission artifact | final calibrated Lasso CSV |
 | Active model count | 5 |
 | Random seed | 42 |
 
